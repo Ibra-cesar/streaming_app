@@ -3,22 +3,41 @@ package main
 import (
 	"fmt"
 	"log"
+	"net/http"
 	"os"
+
+	"github.com/Ibra-cesar/video-streaming/src/internal/routes"
+	"github.com/Ibra-cesar/video-streaming/src/middleware"
 	"github.com/joho/godotenv"
 )
 
-func main(){
-	fmt.Println("Hello Project")
-
+func getPort() string {
 	err := godotenv.Load()
-	if err != nil{
+	if err != nil {
 		log.Fatal("Failed to load .env")
 	}
 
 	port := os.Getenv("PORT")
-	if port == ""{
-		log.Fatal("Port is missing!")
+	if port == "" {
+		log.Fatal("Port is Missing")
 	}
 
-	fmt.Println("Port is running on: ", port)
+	return port
+}
+func main() {
+	//new MULTIPLEXER
+	router := http.NewServeMux()
+
+	routes.RegisterRoutes(router)
+
+	server := http.Server{
+		Addr:    ":" + getPort(),
+		Handler: middleware.Loggers(router),
+	}
+	//serve the server
+	fmt.Println("Server is running on: ", server.Addr)
+	err := server.ListenAndServe()
+	if err != nil {
+		log.Fatal("Failed to serve server")
+	}
 }
