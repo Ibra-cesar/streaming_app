@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/Ibra-cesar/video-streaming/src/helper"
 	"github.com/Ibra-cesar/video-streaming/src/internal/routes"
 	"github.com/Ibra-cesar/video-streaming/src/middleware"
 	"github.com/joho/godotenv"
@@ -28,11 +29,16 @@ func main() {
 	//new MULTIPLEXER
 	router := http.NewServeMux()
 
+	mChain := helper.ChainMiddleware(
+		middleware.Loggers,
+		middleware.FakeMiddleware,
+	)
+
 	routes.RegisterRoutes(router)
 
 	server := http.Server{
 		Addr:    ":" + getPort(),
-		Handler: middleware.Loggers(router),
+		Handler: mChain(router),
 	}
 	//serve the server
 	fmt.Println("Server is running on: ", server.Addr)

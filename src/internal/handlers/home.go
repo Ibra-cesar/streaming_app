@@ -11,7 +11,7 @@ func HomePage(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w,r)
 		return
 	}
-	fmt.Fprintln(w, "Welcome to Home Page")
+	fmt.Fprintln(w, "SDOASJDIOASJIODAWID")
 }
 
 func AboutPage(w http.ResponseWriter, r *http.Request){

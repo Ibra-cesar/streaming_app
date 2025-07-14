@@ -1,0 +1,12 @@
+[build]
+  root = "."
+  cmd = "CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o main ./src/cmd/server/main.go"
+  bin = "main"
+  dir = "."
+  include_ext = ["go"]
+  exclude_dir = ["vendor", ".git"]
+  run_after_build = "chomd +x main"
+
+[log]
+  level = "debug"
+    
