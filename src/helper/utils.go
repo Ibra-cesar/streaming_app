@@ -85,6 +85,12 @@ func Migrator(migPath string) error {
 		}
 	}()
 
+	//Backup clean state
+	//if err := m.Force(1); err != nil { // IMPORTANT: Use the correct dirty version number
+  //      return fmt.Errorf("Failed to force migration version: %v", err)
+  //  }
+  //  fmt.Println("Successfully forced migration version 1 to clean state.")
+
 	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
 		return fmt.Errorf("Err while migrating db, %v", err)
 	}else if err == migrate.ErrNoChange{

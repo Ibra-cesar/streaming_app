@@ -1,0 +1,26 @@
+version: '2'
+sql:
+  - engine: "postgresql"
+    schema: "./src/helper/db/migrations" # Removed trailing slash for consistency (usually doesn't matter, but be exact)
+    queries: "./src/helper/db/queries"   # Removed trailing slash for consistency
+    gen:
+      go:
+        package: "query_repo"
+        out: "./src/internal/query_repo"
+        sql_package: "pgx/v5"
+        overrides:
+          # Override PostgreSQL UUID to Go's github.com/google/uuid.UUID
+          - db_type: "uuid"
+            go_type:
+              import: "github.com/google/uuid"
+              type: "UUID"
+
+          # Override PostgreSQL BOOLEAN to Go's bool
+          - db_type: "boolean"
+            go_type: "bool"
+
+          # Override PostgreSQL TIMESTAMPTZ (timestamp with time zone) to Go's time.Time
+          - db_type: "timestamptz" # <-- Corrected to lowercase
+            go_type:
+              import: "time"
+              type: "Time"
