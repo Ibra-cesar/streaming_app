@@ -7,15 +7,43 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/Ibra-cesar/video-streaming/src/internal/handlers"
 	"github.com/Ibra-cesar/video-streaming/src/internal/routes"
 	"github.com/Ibra-cesar/video-streaming/src/middleware"
-	"github.com/jackc/pgx/v5"
-	"github.com/joho/godotenv"
-
 	"github.com/golang-migrate/migrate/v4"
-	_ "github.com/golang-migrate/migrate/v4/database/postgres"
-	_ "github.com/golang-migrate/migrate/v4/source/file"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/joho/godotenv"
 )
+
+type Application struct{
+	Pool *pgxpool.Pool
+	JwtSecrets []byte
+	AuthHandlers *handlers.AuthConnServices
+}
+
+//APPLICATION
+func App(ctx context.Context) (*Application, error) {
+	pool, err := DbConnection(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("Failed To Set DB Connection: %w", err)
+	}
+	fmt.Println("Successfully connected to DataBase")
+
+	jwtSecrets := []byte(Env("JWT_SECRET_KEYS"))
+	if len(jwtSecrets) == 0 {
+		fmt.Println("JWT_SECRET_KEYS is Missing")
+		jwtSecrets = []byte(Env("DEFAULT_JWT_KEYS"))
+	}
+	authHandlers := handlers.AuthServices(pool, jwtSecrets)
+
+	app := &Application{
+		Pool: pool,
+		JwtSecrets: jwtSecrets,
+		AuthHandlers: authHandlers,
+	}
+
+	return app, nil
+}
 
 // Middleware Chaining Helpers
 type Middleware func(http.Handler) http.Handler
@@ -30,27 +58,27 @@ func ChainMiddleware(ms ...Middleware) Middleware {
 	}
 }
 
+//DB CONNECTION
+func DbConnection(ctx context.Context) (*pgxpool.Pool, error) {
+	config := DefaultConfig()
 
-func DbConnection(ctx context.Context) (*pgx.Conn, error) {
-	dbUri := env("DB_URI")
-	conn, err := pgx.Connect(ctx, dbUri)
-	if err != nil {
+	pool, err := ConnPool(ctx, config)
+		if err != nil {
 		return nil, fmt.Errorf("Failed to connect to database: %w", err)
 	}
-
-	return conn, nil
+	return  pool, nil
 }
-
-func ServerInitialization(mux *http.ServeMux) {
+//server
+func ServerInitialization(mux *http.ServeMux, authHandlers *handlers.AuthConnServices,) {
 	//middleware CHAIN
 	mChain := ChainMiddleware(
 		middleware.Loggers,
 		middleware.FakeMiddleware,
 	)
-	routes.RegisterRoutes(mux)
+	routes.RegisterRoutes(mux, authHandlers)
 	//Server
 	server := http.Server{
-		Addr:    ":" + env("PORT"),
+		Addr:    ":" + Env("PORT"),
 		Handler: mChain(mux),
 	}
 	//serve the server
@@ -65,7 +93,7 @@ func ServerInitialization(mux *http.ServeMux) {
 func Migrator(migPath string) error {
 	fmt.Println("Initializing migrations")
 
-	uri := env("DB_URI")
+	uri := Env("DB_URI")
 
 	m, err := migrate.New(
 		migPath,
@@ -103,7 +131,7 @@ func Migrator(migPath string) error {
 }
 
 //ENV
-func env(name string) string {
+func Env(name string) string {
 	if name == "" {
 		log.Fatal("Missing env variable name")
 	}

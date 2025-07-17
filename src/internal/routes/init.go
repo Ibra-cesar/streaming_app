@@ -1,8 +1,12 @@
 package routes
 
-import "net/http"
+import (
+	"net/http"
 
-func RegisterRoutes(mux *http.ServeMux){
+	"github.com/Ibra-cesar/video-streaming/src/internal/handlers"
+)
+
+func RegisterRoutes(mux *http.ServeMux, authHandlers *handlers.AuthConnServices){
 	HomeRouter(mux)
-	AuthRouter(mux)
+	AuthRouter(mux, authHandlers)
 }
