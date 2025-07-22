@@ -9,10 +9,21 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const deleteUser = `-- name: DeleteUser :exec
+DELETE FROM users
+  WHERE id = $1
+`
+
+func (q *Queries) DeleteUser(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.Exec(ctx, deleteUser, id)
+	return err
+}
+
 const getAllPlayers = `-- name: GetAllPlayers :many
-SELECT id, name, email, password_hash, salt, is_admin, created_at, updated_at FROM users
+SELECT id, name, email, password_hash, is_admin, created_at, updated_at FROM users
 `
 
 func (q *Queries) GetAllPlayers(ctx context.Context) ([]User, error) {
@@ -29,7 +40,6 @@ func (q *Queries) GetAllPlayers(ctx context.Context) ([]User, error) {
 			&i.Name,
 			&i.Email,
 			&i.PasswordHash,
-			&i.Salt,
 			&i.IsAdmin,
 			&i.CreatedAt,
 			&i.UpdatedAt,
@@ -50,12 +60,10 @@ INSERT INTO users (
   id,
   name,
   email,
-  password_hash,
-  salt
+  password_hash
 ) VALUES ( 
-    $1, $2, $3, $4, $5
-)
-RETURNING id, name, email, password_hash, salt, is_admin, created_at, updated_at
+    $1, $2, $3, $4
+) RETURNING id, name, email, is_admin, created_at, updated_at
 `
 
 type InsertUserParams struct {
@@ -63,24 +71,29 @@ type InsertUserParams struct {
 	Name         string
 	Email        string
 	PasswordHash string
-	Salt         string
 }
 
-func (q *Queries) InsertUser(ctx context.Context, arg InsertUserParams) (User, error) {
+type InsertUserRow struct {
+	ID        uuid.UUID
+	Name      string
+	Email     string
+	IsAdmin   pgtype.Bool
+	CreatedAt pgtype.Timestamptz
+	UpdatedAt pgtype.Timestamptz
+}
+
+func (q *Queries) InsertUser(ctx context.Context, arg InsertUserParams) (InsertUserRow, error) {
 	row := q.db.QueryRow(ctx, insertUser,
 		arg.ID,
 		arg.Name,
 		arg.Email,
 		arg.PasswordHash,
-		arg.Salt,
 	)
-	var i User
+	var i InsertUserRow
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
 		&i.Email,
-		&i.PasswordHash,
-		&i.Salt,
 		&i.IsAdmin,
 		&i.CreatedAt,
 		&i.UpdatedAt,

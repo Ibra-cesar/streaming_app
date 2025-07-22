@@ -7,9 +7,11 @@ INSERT INTO users (
   id,
   name,
   email,
-  password_hash,
-  salt
+  password_hash
 ) VALUES ( 
-    $1, $2, $3, $4, $5
-)
-RETURNING *;
+    $1, $2, $3, $4
+) RETURNING id, name, email, is_admin, created_at, updated_at;
+
+-- name: DeleteUser :exec
+DELETE FROM users
+  WHERE id = $1;

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -15,19 +16,16 @@ func main() {
 
 	app, err := helper.App(ctx)
 	if err != nil {
-		log.Fatal("Failed to initialize Server, %v", err)
+		log.Fatal("Failed to initialize Application, %w", err)
 	}
 
 	defer app.Pool.Close()
 
-	//Migration SETUP
-	//migPath := "file://./src/helper/db/migrations/"
-
-	//err = helper.Migrator(migPath)
-	//if err != nil {
-	//	log.Fatalf("Migrations Failed, %v", err)
-	//}
-	//fmt.Println("Migrations is success")
+	err = helper.Migrator()
+	if err != nil {
+		log.Fatalf("Migrations Failed, %v", err)
+	}
+	fmt.Println("Migrations is success")
 
 	repo := query_repo.New(app.Pool)
 
@@ -38,5 +36,5 @@ func main() {
 	helper.PrintUser(userList)
 	//SERVER SETUP
 	routes := http.NewServeMux()
-	helper.ServerInitialization(routes, app.AuthHandlers)
+	helper.ServerInitialization(routes, app.AuthHandler)
 }

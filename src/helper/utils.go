@@ -11,40 +11,11 @@ import (
 	"github.com/Ibra-cesar/video-streaming/src/internal/routes"
 	"github.com/Ibra-cesar/video-streaming/src/middleware"
 	"github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"     // Add this line
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 )
-
-type Application struct{
-	Pool *pgxpool.Pool
-	JwtSecrets []byte
-	AuthHandlers *handlers.AuthConnServices
-}
-
-//APPLICATION
-func App(ctx context.Context) (*Application, error) {
-	pool, err := DbConnection(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("Failed To Set DB Connection: %w", err)
-	}
-	fmt.Println("Successfully connected to DataBase")
-
-	jwtSecrets := []byte(Env("JWT_SECRET_KEYS"))
-	if len(jwtSecrets) == 0 {
-		fmt.Println("JWT_SECRET_KEYS is Missing")
-		jwtSecrets = []byte(Env("DEFAULT_JWT_KEYS"))
-	}
-	authHandlers := handlers.AuthServices(pool, jwtSecrets)
-
-	app := &Application{
-		Pool: pool,
-		JwtSecrets: jwtSecrets,
-		AuthHandlers: authHandlers,
-	}
-
-	return app, nil
-}
-
 // Middleware Chaining Helpers
 type Middleware func(http.Handler) http.Handler
 
@@ -68,6 +39,7 @@ func DbConnection(ctx context.Context) (*pgxpool.Pool, error) {
 	}
 	return  pool, nil
 }
+
 //server
 func ServerInitialization(mux *http.ServeMux, authHandlers *handlers.AuthConnServices,) {
 	//middleware CHAIN
@@ -90,15 +62,17 @@ func ServerInitialization(mux *http.ServeMux, authHandlers *handlers.AuthConnSer
 }
 
 //DB MIGRATOR
-func Migrator(migPath string) error {
+func Migrator() error {
 	fmt.Println("Initializing migrations")
 
+	migPath := "file://./src/helper/db/migrations/"
 	uri := Env("DB_URI")
 
 	m, err := migrate.New(
 		migPath,
 		uri,
 	)
+
 	if err != nil{
 		return fmt.Errorf("Error while migrate, %v", err)
 	}
@@ -139,8 +113,7 @@ func Env(name string) string {
 	if err != nil {
 		log.Fatal("Failed to Load Env")
 	}
-
 	env := os.Getenv(name)
-
-	return  env
+	return env
 }
+
