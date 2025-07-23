@@ -12,6 +12,45 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const deleteExpiresToken = `-- name: DeleteExpiresToken :exec
+DELETE FROM refresh_tokens 
+WHERE expires_at <= now()
+`
+
+func (q *Queries) DeleteExpiresToken(ctx context.Context) error {
+	_, err := q.db.Exec(ctx, deleteExpiresToken)
+	return err
+}
+
+const deleteToken = `-- name: DeleteToken :exec
+DELETE FROM refresh_tokens
+WHERE user_id = $1
+`
+
+func (q *Queries) DeleteToken(ctx context.Context, userID uuid.UUID) error {
+	_, err := q.db.Exec(ctx, deleteToken, userID)
+	return err
+}
+
+const getToken = `-- name: GetToken :one
+SELECT token, user_id FROM refresh_tokens
+WHERE token = $1
+AND expires_at > now()
+LIMIT 1
+`
+
+type GetTokenRow struct {
+	Token  string
+	UserID uuid.UUID
+}
+
+func (q *Queries) GetToken(ctx context.Context, token string) (GetTokenRow, error) {
+	row := q.db.QueryRow(ctx, getToken, token)
+	var i GetTokenRow
+	err := row.Scan(&i.Token, &i.UserID)
+	return i, err
+}
+
 const getUserTokens = `-- name: GetUserTokens :many
 SELECT token, user_id, expires_at, created_at FROM refresh_tokens
 `

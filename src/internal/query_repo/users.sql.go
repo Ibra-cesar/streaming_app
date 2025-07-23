@@ -54,6 +54,22 @@ func (q *Queries) GetAllPlayers(ctx context.Context) ([]User, error) {
 	return items, nil
 }
 
+const getUser = `-- name: GetUser :one
+SELECT id, email FROM users where id = $1
+`
+
+type GetUserRow struct {
+	ID    uuid.UUID
+	Email string
+}
+
+func (q *Queries) GetUser(ctx context.Context, id uuid.UUID) (GetUserRow, error) {
+	row := q.db.QueryRow(ctx, getUser, id)
+	var i GetUserRow
+	err := row.Scan(&i.ID, &i.Email)
+	return i, err
+}
+
 const insertUser = `-- name: InsertUser :one
 
 INSERT INTO users (

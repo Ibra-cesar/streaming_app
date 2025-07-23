@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 )
 
 func GenerateJWT(userID, email string, secrets []byte) (string, error){
@@ -18,6 +19,7 @@ func GenerateJWT(userID, email string, secrets []byte) (string, error){
 			Subject: userID,
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(30 * time.Minute)),
 			IssuedAt: jwt.NewNumericDate(time.Now()),
+			ID: uuid.NewString(),
 		},
 	}
 
@@ -49,7 +51,7 @@ func ValidateToken[T jwt.Claims](token string, secrets []byte)(*T, error){
 }
 
 func GenerateRefreshToken(userId string, secrets []byte)(string, error){
-		claims := JwtClaims{
+	claims := JwtClaims{
 		UserID: userId,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer: "http://localhost:8080/auth",
@@ -57,6 +59,7 @@ func GenerateRefreshToken(userId string, secrets []byte)(string, error){
 			Subject: userId,
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(7 * 24 * time.Hour)),
 			IssuedAt: jwt.NewNumericDate(time.Now()),
+			ID: uuid.NewString(),
 		},
 	}
 

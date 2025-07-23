@@ -45,9 +45,9 @@ func SetCookie(w http.ResponseWriter, name, token string, httpOnly bool, secure 
 	http.SetCookie(w, cookie)
 }
 
-func DeleteCookie(w http.ResponseWriter){
+func DeleteCookie(w http.ResponseWriter, name string){
 	cookie := &http.Cookie{
-		Name: "Access-Token",
+		Name: name,
 		Value: "",
 		HttpOnly: true,
 		Secure: false,

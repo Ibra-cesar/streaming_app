@@ -15,3 +15,6 @@ INSERT INTO users (
 -- name: DeleteUser :exec
 DELETE FROM users
   WHERE id = $1;
+
+-- name: GetUser :one
+SELECT id, email FROM users where id = $1;
