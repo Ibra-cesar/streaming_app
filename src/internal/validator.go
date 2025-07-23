@@ -24,6 +24,7 @@ func Validate[T any](r *http.Request)(*T, error){
 		return nil, fmt.Errorf("Invalid JSON %w", err)
 	}
 
+	defer r.Body.Close()
 	saniteze(&input)
 
 	err = validate.Struct(input)

@@ -93,7 +93,7 @@ func(ref *RefreshHandlers) Refresh(w http.ResponseWriter, r *http.Request){
 	//Revoked refresh token
 	err = ref.Q.DeleteToken(reqCtx, storedRefToken.UserID) 
 	if err != nil {
-		log.Printf("Failed to delete token from db")
+		log.Printf("Failed to delete token from db: %v", err)
 	}
 
 	//fetch user information(id, Email)

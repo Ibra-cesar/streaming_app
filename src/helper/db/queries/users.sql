@@ -17,4 +17,7 @@ DELETE FROM users
   WHERE id = $1;
 
 -- name: GetUser :one
-SELECT id, email FROM users where id = $1;
+SELECT id, email, name FROM users where id = $1;
+
+-- name: GetUserByEmail :one
+SELECT password_hash, id, email, name FROM users WHERE email = $1;
