@@ -12,6 +12,7 @@ import (
 type Application struct{
 	Pool *pgxpool.Pool
 	AuthHandler *handlers.AuthConnServices
+	RefreshHandler *handlers.RefreshHandlers
 	Queries *query_repo.Queries
 }
 
@@ -31,10 +32,12 @@ func App(ctx context.Context) (*Application, error){
 	jwtRefreshTokenSecret := []byte(Env("JWT_REFRESH_TOKEN_KEY"))
 
 	authHandler := handlers.AuthServices(queries, jwtSecrets, jwtRefreshTokenSecret)
+	refreshHandler := handlers.RefreshService(*queries, jwtSecrets, jwtRefreshTokenSecret)
 
 	return &Application{
 		Pool: pool,
 		AuthHandler: authHandler,
+		RefreshHandler: refreshHandler,
 		Queries: queries,
 	}, nil
 }

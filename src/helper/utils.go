@@ -41,13 +41,14 @@ func DbConnection(ctx context.Context) (*pgxpool.Pool, error) {
 }
 
 //server
-func ServerInitialization(mux *http.ServeMux, authHandlers *handlers.AuthConnServices,) {
+func ServerInitialization(mux *http.ServeMux, authHandlers *handlers.AuthConnServices, refreshHandler *handlers.RefreshHandlers) {
 	//middleware CHAIN
 	mChain := ChainMiddleware(
 		middleware.Loggers,
 		middleware.FakeMiddleware,
 	)
-	routes.RegisterRoutes(mux, authHandlers)
+	routes.RegisterPubRoutes(mux, authHandlers, refreshHandler)
+	routes.RegisterPrivRoutes(mux)
 	//Server
 	server := http.Server{
 		Addr:    ":" + Env("PORT"),

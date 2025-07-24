@@ -36,5 +36,5 @@ func main() {
 	helper.PrintUser(userList)
 	//SERVER SETUP
 	routes := http.NewServeMux()
-	helper.ServerInitialization(routes, app.AuthHandler)
+	helper.ServerInitialization(routes, app.AuthHandler, app.RefreshHandler)
 }

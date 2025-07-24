@@ -38,6 +38,15 @@ func (auth *AuthConnServices) SignUp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	_, err = auth.Queries.GetUserByEmail(reqCtx, input.Email)
+	if err == nil {
+		log.Printf("Email is already exist")
+		internal.HttpError(w, internal.Response{
+			Message: "Email is already exist",
+		}, http.StatusBadRequest)
+		return;
+	}
+
 	hash, err := HashPassword(input.Password)
 	if err != nil {
 		internal.HttpError(w, internal.Response{
@@ -212,18 +221,20 @@ func (auth *AuthConnServices) LogOut(w http.ResponseWriter, r *http.Request) {
 	 }
 	 refreshToken := cookie.Value
 
-	 tokenClaims, err := internal.ValidateToken[internal.JwtRefreshTokenClaims](refreshToken, auth.JwtRefreshTokenSecrets)
-	 if err != nil{
+	 claims := &internal.JwtRefreshTokenClaims{}
+
+	_, err = internal.ValidateToken(refreshToken, auth.JwtRefreshTokenSecrets, claims)
+	if err != nil {
 		log.Printf("Invalid Token, %v", err)
 		DeleteCookie(w, "refresh-token")
 		internal.HttpError(w, internal.Response{
 			Message: "Invalid Token",
-			Error: err.Error(),
+			Error:   err.Error(),
 		}, http.StatusUnauthorized)
 		return
 	}
 
-	userId, _ := uuid.Parse(tokenClaims.UserId)
+	userId, _ := uuid.Parse(claims.UserId)
 	
 	DeleteCookie(w, "access-token")
 	DeleteCookie(w, "refresh-token")

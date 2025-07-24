@@ -7,7 +7,7 @@ import (
 )
 
 func AuthRouter(mux *http.ServeMux, authHandler *handlers.AuthConnServices){
-	mux.HandleFunc("POST /sign-in", authHandler.SignIn)
-	mux.HandleFunc("POST /sign-up", authHandler.SignUp)
-	mux.HandleFunc("POST /log-out", authHandler.LogOut)
+	mux.HandleFunc("POST /auth/sign-in", authHandler.SignIn)
+	mux.HandleFunc("POST /auth/sign-up", authHandler.SignUp)
+	mux.HandleFunc("POST /auth/log-out", authHandler.LogOut)
 }

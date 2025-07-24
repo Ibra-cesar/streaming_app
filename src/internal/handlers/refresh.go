@@ -49,13 +49,15 @@ func(ref *RefreshHandlers) Refresh(w http.ResponseWriter, r *http.Request){
 	refreshToken := cookie.Value
 
 	//validate the refresh token from cookie
-	refreshTokenValid, err := internal.ValidateToken[internal.JwtRefreshTokenClaims](refreshToken, ref.RefreshToken)
-	if err != nil{
+  claims := &internal.JwtRefreshTokenClaims{}
+
+	_, err = internal.ValidateToken(refreshToken, ref.RefreshToken, claims)
+	if err != nil {
 		log.Printf("Invalid Token, %v", err)
 		DeleteCookie(w, "refresh-token")
 		internal.HttpError(w, internal.Response{
 			Message: "Invalid Token",
-			Error: err.Error(),
+			Error:   err.Error(),
 		}, http.StatusUnauthorized)
 		return
 	}
@@ -81,8 +83,8 @@ func(ref *RefreshHandlers) Refresh(w http.ResponseWriter, r *http.Request){
 	}
 
 	//check userId payload between client refresh token and server refresh token
-	if parse, _ := uuid.Parse(refreshTokenValid.UserId); storedRefToken.UserID != parse {
-		log.Printf("RefreshToken error: UserID mismatch: %s vs %s", refreshTokenValid.UserId, storedRefToken.UserID)
+	if parse, _ := uuid.Parse(claims.UserId); storedRefToken.UserID != parse {
+		log.Printf("RefreshToken error: UserID mismatch: %s vs %s", claims.UserId, storedRefToken.UserID)
 		DeleteCookie(w, "refresh-token")
 		internal.HttpError(w, internal.Response{
 			Message: "Invalid refresh token",

@@ -22,12 +22,12 @@ type SignUpInput struct {
 }
 
 type JwtClaims struct {
-	UserID string
-	Email  string
+	UserID string `json:"user_id"`
+	Email  string `json:"email"`
 	jwt.RegisteredClaims
 }
 
 type JwtRefreshTokenClaims struct {
-	UserId string
+	UserId string `json:"user_id"`
 	jwt.RegisteredClaims
 }

@@ -27,29 +27,26 @@ func GenerateJWT(userID, email string, secrets []byte) (string, error){
 	return  token.SignedString(secrets)
 }
 
-func ValidateToken[T jwt.Claims](token string, secrets []byte)(*T, error){
-	var tokenStruct T
-	t, err := jwt.ParseWithClaims(token, tokenStruct, func(t *jwt.Token) (any, error) {
+func ValidateToken(token string, secrets []byte, claims jwt.Claims) (*jwt.Token, error) {
+	tkn, err := jwt.ParseWithClaims(token, claims, func(t *jwt.Token) (any, error) {
 		return secrets, nil
 	})
 	if err != nil {
-		if errors.Is(err, jwt.ErrTokenExpired){
-			return nil, fmt.Errorf("%w",err)
+		if errors.Is(err, jwt.ErrTokenExpired) {
+			return nil, fmt.Errorf("%w", err)
 		}
-		if errors.Is(err, jwt.ErrTokenInvalidIssuer){
-			return nil, fmt.Errorf("%w",err)
+		if errors.Is(err, jwt.ErrTokenInvalidIssuer) {
+			return nil, fmt.Errorf("%w", err)
 		}
-		return nil, fmt.Errorf("Failed to parse Token, %w", err)
+		return nil, fmt.Errorf("failed to parse token: %w", err)
 	}
 
-	claims, ok := t.Claims.(T)
-	if !ok || !t.Valid{
+	if !tkn.Valid {
 		return nil, fmt.Errorf("%w", jwt.ErrTokenInvalidClaims)
 	}
 
-	return &claims, nil
+	return tkn, nil
 }
-
 func GenerateRefreshToken(userId string, secrets []byte)(string, error){
 	claims := JwtClaims{
 		UserID: userId,
